@@ -154,22 +154,27 @@ def select_save_file():
 
 # Function to save DataFrame to Excel sheet
 def save_df_to_sheet(workbook, sheet_name, df):
-    ws = workbook.create_sheet(sheet_name)
-    for r in dataframe_to_rows(df, index=True, header=True):
-        ws.append(r)
-    
-    # Resize columns to fit data
-    for col in ws.columns:
-        max_length = 0
-        column = col[0].column_letter  # Get the column name
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = (max_length + 2)
-        ws.column_dimensions[column].width = adjusted_width
+    try:
+        ws = workbook.create_sheet(sheet_name)
+        for r in dataframe_to_rows(df, index=True, header=True):
+            ws.append(r)
+        
+        # Resize columns to fit data
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter  # Get the column name
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column].width = adjusted_width
+
+    except Exception as e:
+        print(f"An error occurred while saving DataFrame to sheet '{sheet_name}': {e}")
+
 
 
 # Function to save plot to Excel sheet
@@ -179,35 +184,39 @@ from openpyxl.drawing.image import Image
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 def save_plot_to_sheet(workbook, sheet_name, plot_data, table_data, img_name):
-    fig, ax = plt.subplots()
-    # plot data, title = test or plot description
-    plot_data.plot(kind='bar', title='', ax=ax)
-    fig.savefig(img_name, dpi=100)
-    
-    ws = workbook.create_sheet(sheet_name)
-    img = Image(img_name)
-    ws.add_image(img, 'A2')
-    
-    # save the table_data DataFrame starting in cell L1
-    rows = dataframe_to_rows(table_data.reset_index(), index=False, header=True)
+    try:
+        fig, ax = plt.subplots()
+        # plot data, title = test or plot description
+        plot_data.plot(kind='bar', title='', ax=ax)
+        fig.savefig(img_name, dpi=100)
+        
+        ws = workbook.create_sheet(sheet_name)
+        img = Image(img_name)
+        ws.add_image(img, 'A2')
+        
+        # save the table_data DataFrame starting in cell L1
+        rows = dataframe_to_rows(table_data.reset_index(), index=False, header=True)
 
-    for r_idx, row in enumerate(rows, 1):
-        for c_idx, value in enumerate(row, 18):  # Change 1 to 12 to start from the L column
-            cell = ws.cell(row=r_idx, column=c_idx)
-            cell.value = value
-    
-    # Resize columns to fit data
-    for col in ws.columns:
-        max_length = 0
-        column = col[0].column_letter
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = (max_length + 2)
-        ws.column_dimensions[column].width = adjusted_width
+        for r_idx, row in enumerate(rows, 1):
+            for c_idx, value in enumerate(row, 18):  # Change 1 to 12 to start from the L column
+                cell = ws.cell(row=r_idx, column=c_idx)
+                cell.value = value
+        
+        # Resize columns to fit data
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column].width = adjusted_width
+
+    except Exception as e:
+        print(f"An error occurred while saving plot to sheet '{sheet_name}': {e}")
 
 
         
@@ -258,7 +267,7 @@ filtered_groups = grouped_df.filter(lambda x: len(x) > 1)
 sorted_filtered_groups = filtered_groups.sort_values(by=['Approved Amount (rpt)', 'Employee ID', 'Vendor', 'Transaction Date'], ascending=[False, True, True, True])
 
 # Save the grouped data to a new sheet in the Excel file
-save_df_to_sheet(wb, "Test 1", sorted_filtered_groups[['Employee', 'Employee ID', 'Vendor', 'Approved Amount (rpt)', 'Transaction Date']])
+save_df_to_sheet(wb, "Test 1", sorted_filtered_groups[['Employee','Employee ID','Transaction Date','Approved Amount (rpt)','Transaction Date','Vendor','Report Name']])
 # TEST 2-----------same employee, amount and date -----------------------------
 test2 = 'Same employee, amount and date'
 
@@ -272,7 +281,7 @@ filtered_groups2 = grouped_df2.filter(lambda x: len(x) > 1)
 sorted_filtered_groups2 = filtered_groups2.sort_values(by=['Approved Amount (rpt)', 'Employee ID', 'Transaction Date'], ascending=[False, True, True])
 
 # Save the grouped data to a new sheet in the Excel file
-save_df_to_sheet(wb, "Test 2", sorted_filtered_groups2[['Employee', 'Employee ID', 'Approved Amount (rpt)', 'Transaction Date', 'Vendor', 'Report Name']])
+save_df_to_sheet(wb, "Test 2", sorted_filtered_groups2[['Employee','Employee ID','Transaction Date','Approved Amount (rpt)','Transaction Date','Vendor','Report Name']])
 test3 = 'Same employee, same amount'
 
 # Group by employee id and approved amount
@@ -285,7 +294,7 @@ filtered_groups3 = grouped_df3.filter(lambda x: len(x) > 1)
 sorted_filtered_groups3 = filtered_groups3.sort_values(by=['Approved Amount (rpt)', 'Employee ID'], ascending=[False, True])
 
 # Save the grouped data to a new sheet in the Excel file
-save_df_to_sheet(wb, "Test 3", sorted_filtered_groups3[['Employee', 'Employee ID', 'Approved Amount (rpt)', 'Transaction Date', 'Vendor', 'Report Name']])
+save_df_to_sheet(wb, "Test 3", sorted_filtered_groups3[['Employee','Employee ID','Transaction Date','Approved Amount (rpt)','Transaction Date','Vendor','Report Name']])
 
 
 # Custom function to find the matched keyword in the report name
@@ -303,6 +312,7 @@ root.withdraw()
 print("Please select keywords file")
 file_path = filedialog.askopenfilename()
 print("Loading Keywords: ", file_path, "")
+import re
 
 # Read in keywords from the Excel file
 keywords = pd.read_excel(file_path)
@@ -310,8 +320,17 @@ keywords = pd.read_excel(file_path)
 # Convert the first column of keywords DataFrame to a list
 keywords = keywords.iloc[:, 0].tolist()
 
+def find_matched_keyword(text, keywords):
+    for keyword in keywords:
+        if re.search(r'\b' + re.escape(keyword) + r'\b', text, re.IGNORECASE):
+            return keyword
+    return None
+
+# Create a regular expression pattern with word boundaries
+pattern = '|'.join(r'\b' + re.escape(keyword) + r'\b' for keyword in keywords)
+
 # Group the data with any of the keywords, sort by approved amount (descending) and keyword
-grouped_df4 = filtered_df[filtered_df['Report Name'].str.contains('|'.join(keywords))].sort_values(by=['Approved Amount (rpt)', 'Report Name'], ascending=[False, True])
+grouped_df4 = filtered_df[filtered_df['Report Name'].str.contains(pattern, regex=True, na=False)].sort_values(by=['Approved Amount (rpt)', 'Report Name'], ascending=[False, True])
 
 # Remove empty dataframes from the grouped data
 grouped_df4 = grouped_df4[grouped_df4['Approved Amount (rpt)'].notna()]
@@ -320,7 +339,6 @@ grouped_df4 = grouped_df4[grouped_df4['Approved Amount (rpt)'].notna()]
 grouped_df4['Matched Keyword'] = grouped_df4['Report Name'].apply(lambda x: find_matched_keyword(x, keywords))
 
 # Save the grouped data to a new sheet in the Excel file, including the 'Matched Keyword' column
-
 save_df_to_sheet(wb, "Test 4", grouped_df4[['Employee', 'Employee ID', 'Transaction Date', 'Report Name', 'Approved Amount (rpt)', 'Matched Keyword']])
 
 
@@ -342,7 +360,7 @@ grouped_df5.reset_index(drop=True, inplace=True)
 fuzzy_matched_df5 = find_fuzzy_match(grouped_df5)
 
 # Save the grouped data to a new sheet in the Excel file
-save_df_to_sheet(wb, "Test 5", fuzzy_matched_df5[['Employee', 'Employee ID', 'Vendor', 'Transaction Date', 'Report Name', 'Approved Amount (rpt)']])
+save_df_to_sheet(wb, "Test 5", fuzzy_matched_df5[['Employee','Employee ID','Transaction Date','Approved Amount (rpt)','Transaction Date','Vendor','Report Name']])
 
 test6 = 'Same employee and expense type fuzzy match on date and amount'
 
@@ -361,7 +379,7 @@ grouped_df6.reset_index(drop=True, inplace=True)
 grouped_df6 = grouped_df6.sort_values(by=['Approved Amount (rpt)'], ascending=False)
 
 # Save the grouped data to a new sheet in the Excel file
-save_df_to_sheet(wb, "Test 6", grouped_df6[['Employee', 'Employee ID', 'Expense Type', 'Transaction Date', 'Report Name', 'Approved Amount (rpt)']])
+save_df_to_sheet(wb, "Test 6", grouped_df6[['Employee','Employee ID','Transaction Date','Approved Amount (rpt)','Transaction Date','Vendor','Report Name']])
 
 # TEST 7-------------------Different employees, same amount, same date
 test7 = 'Different employees, same amount, same date'
@@ -376,7 +394,7 @@ filtered_groups7 = grouped_df7.filter(lambda x: x['Employee ID'].nunique() > 1)
 sorted_filtered_groups7 = filtered_groups7.sort_values(by=['Approved Amount (rpt)', 'Transaction Date', 'Vendor'], ascending=[False, True, True])
 
 # Save the grouped data to a new sheet in the Excel file
-save_df_to_sheet(wb, "Test 7", sorted_filtered_groups7[['Employee', 'Employee ID', 'Vendor', 'Approved Amount (rpt)', 'Transaction Date', 'Report Name']])
+save_df_to_sheet(wb, "Test 7", sorted_filtered_groups7[['Employee','Employee ID','Transaction Date','Approved Amount (rpt)','Transaction Date','Vendor','Report Name']])
 
 # define plot 1
 plot1 = 'Top 20 Employees by Total Approved Amount'
@@ -577,8 +595,6 @@ avg_approved_by_month['mean'] = avg_approved_by_month['mean'].map('${:,.2f}'.for
 
 table_data = avg_approved_by_month
 
-# Create plot data
-plot_data = avg_approved_by_month
 
 # Save the plot to Excel sheet
 save_plot_to_sheet(wb, "Plot 10", plot_data, table_data, "temp_plot10.png")
@@ -626,8 +642,12 @@ df = df[df['Difference'] > 180].sort_values(by='Difference', ascending=False)[['
 # create a dataframe with employee and difference in days
 plot_data = df[['Employee', 'Difference']]
 
+#convert approved amount to 2 decimal places and have commas and dollar signs
+df['Approved Amount (rpt)'] = df['Approved Amount (rpt)'].map('${:,.2f}'.format)
+
+
 # format the difference column to 2 decimal places and have commas and dollar signs
-df['Difference'] = df['Difference'].map('{:,.2f}'.format)
+df['Difference'] = df['Difference'].map('{:,.0f}'.format)
 
 # create a dataframe with employee, transaction date, sent for payment date, and difference in days
 table_data = df[['Employee', 'Transaction Date', 'Sent for Payment Date', 'Difference', 'Approved Amount (rpt)']]
@@ -653,13 +673,14 @@ filtered_df = filtered_df[filtered_df['Difference'] > 100].sort_values(by='Diffe
 # Create plot data with 'Employee' and 'Difference'
 plot_data = filtered_df[['Employee', 'Difference']]
 
+
 # Create table data with 'Employee', 'Vendor', 'Vendor Average', 'Approved Amount (rpt)', and 'Difference'
 table_data = filtered_df[['Employee', 'Vendor', 'Vendor Average', 'Approved Amount (rpt)', 'Difference']]
 
 #format the data for the table
 table_data['Vendor Average'] = table_data['Vendor Average'].map('{:,.2f}'.format)
 table_data['Approved Amount (rpt)'] = table_data['Approved Amount (rpt)'].map('{:,.2f}'.format)
-table_data['Difference'] = table_data['Difference'].map('{:,.2f}'.format)
+table_data['Difference'] = table_data['Difference'].map('{:,.0f}'.format)
 
 # define plot 13
 plot13 = 'Approved Amount Difference from Average of Vendor (Over $100)'
